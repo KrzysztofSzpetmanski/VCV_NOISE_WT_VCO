@@ -17,6 +17,19 @@ buduje z nich 2 buforowane fale WT i wykonuje morph/interpolację między nimi.
   - `docs/GITHUB_SETUP.md`
   - `.github/workflows/repo-check.yml`
 
+## GitHub
+
+- Repo: [KrzysztofSzpetmanski/VCV_NOISE_WT_VCO](https://github.com/KrzysztofSzpetmanski/VCV_NOISE_WT_VCO)
+- Domyślny branch: `main`
+- Szybki start:
+  - `git clone https://github.com/KrzysztofSzpetmanski/VCV_NOISE_WT_VCO.git`
+  - `cd VCV_NOISE_WT_VCO`
+  - `git checkout -b codex/<nazwa-zmiany>`
+- Publikacja zmian:
+  - `git add .`
+  - `git commit -m "..."`
+  - `git push -u origin codex/<nazwa-zmiany>`
+
 ## Referencje
 
 1. Patch MAX (lokalny):
@@ -64,6 +77,8 @@ charakter i płynny morph między dwiema niezależnie wygenerowanymi falami.
    - `TRIG GEN` input (trigger do wygenerowania nowego zestawu WT).
    - `MORPH CV` input.
    - `WT SIZE CV` input.
+   - `DENS CV` input.
+   - `SMOTH CV` input.
    - `L OUT`, `R OUT`.
 
 2. Kontrolki
@@ -72,7 +87,9 @@ charakter i płynny morph między dwiema niezależnie wygenerowanymi falami.
    - `UNISON` (0..9).
    - `OCTAVE` (-3..+3).
    - `MORPH` (manual blend A<->B, plus CV).
-   - `WT SIZE` (manual + CV; zakres dyskretny: 256/512/1024/2048/4096).
+   - `WT SIZE` (manual + CV; zakres int ciągły: 256..2048).
+   - `DENS` (1..48, liczba punktów wewnętrznych generacji WT).
+   - `SMOTH` (0..100 INT, charakter interpolacji między punktami DENS).
    - `GEN` push button (lokalne wyzwolenie nowego zestawu WT).
 
 3. Zachowanie GEN
@@ -88,20 +105,23 @@ charakter i płynny morph między dwiema niezależnie wygenerowanymi falami.
 
 ## Algorytm generacji WT (spec)
 
-1. Dla każdej strony (`A` i `B`) generujemy surowy sygnał noise o długości:
-   - `noiseLen = WT_SIZE * NOISE_OVERSCAN`,
-   - gdzie `NOISE_OVERSCAN > 1` (na start stała, np. `4x`).
+Aktualna implementacja używa algorytmu `DENS/SMOTH`:
 
-2. Szukamy dwóch punktów przecięcia z zerem:
-   - `z0` = pierwsze sensowne przejście przez 0 (początek segmentu),
-   - `z1` = kolejne przejście przez 0 przy odpowiedniej odległości od `z0`.
+1. Skrajne próbki w `wtA/wtB` są zawsze wymuszone na `0`.
+2. `DENS` definiuje liczbę punktów wewnętrznych (bez skrajnych) równomiernie rozłożonych po oknie.
+3. Wartości punktów wewnętrznych są pobierane z wygenerowanego szumu.
+4. Wszystkie brakujące próbki są odtwarzane między punktami:
+   - `SMOTH=0` -> linie proste
+   - `SMOTH=100` -> przebiegi maksymalnie gładkie (kosinusowe/sinusoidalne w charakterze)
+   - wartości pośrednie -> blend liniowa<->gładka.
+5. Na końcu fala jest normalizowana.
+6. `wtA` i `wtB` są przeliczane na wrapie głównego phasora tylko gdy zmieni się:
+   `WT SIZE`, `DENS`, `SMOTH` albo gdy zajdzie `GEN`.
+7. Każda taka zmiana ma crossfade tabeli przez ok. `200 ms`, żeby ograniczyć trzaski/skoki.
+8. `SEED` (noise source) zmienia się tylko po `GEN` / `TRIG GEN`.
 
-3. Wycinamy segment `[z0, z1]` i skalujemy (resample) do dokładnego `WT_SIZE`.
-
-4. Znormalizowany wynik wpisujemy do bufora WT (`A` albo `B`).
-
-5. Bufor wynikowy `R` powstaje przez interpolację:
-   - `R[i] = (1 - morph) * A[i] + morph * B[i]`.
+Szczegóły aktualnego algorytmu + opis legacy:
+- `docs/STATUS.md`
 
 ## Architektura buforów
 
@@ -121,12 +141,16 @@ charakter i płynny morph między dwiema niezależnie wygenerowanymi falami.
   - pokrętło z submenu głębokości CV + ring/LED jak w `KSZ_ABLETON_ARP`.
 
 - `WT SIZE`:
-  - parametr dyskretny mapowany na `{256, 512, 1024, 2048, 4096}`,
-  - CV kwantyzowane do jednego z 5 stanów.
+  - parametr int w zakresie `256..2048`,
+  - CV działa w tym samym zakresie (z głębokością CV w menu pokrętła).
 
 - `UNISON`:
   - int `0..9`,
   - `DETUNE` steruje rozjazdem głosów unison.
+
+- `DENS` i `SMOTH`:
+  - oba mają wejścia CV (`DENS CV`, `SMOTH CV`),
+  - oba mają menu głębokości CV w pokrętle (jak pozostałe modulowane kontrolki).
 
 ## Plan implementacyjny (kolejność)
 
@@ -151,3 +175,11 @@ charakter i płynny morph między dwiema niezależnie wygenerowanymi falami.
 - [x] Definicja założeń projektu i architektury `Noise_VCO`.
 - [ ] Implementacja kodu modułu VCV.
 - [ ] Wstępny build i smoke test w Rack.
+
+## Reverb backend
+
+- Aktualny reverb w module jest oparty o `daisysp::ReverbSc` (`src/reverbsc.h`, `src/reverbsc.cpp`).
+- Źródło: DaisySP (Electro-Smith), klasa `ReverbSc`.
+- Licencja tego komponentu: **LGPL-2.1** (nagłówek w plikach źródłowych).
+- Kopia tekstu licencji dołączona w repo:
+  - `docs/THIRD_PARTY_DAISYSP_LGPL_LICENSE.txt`

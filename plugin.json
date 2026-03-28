@@ -1,14 +1,14 @@
 {
   "slug": "NoiseVCO",
-  "name": "Noise VCO",
-  "version": "0.1.0",
+  "name": "KSZ Noise WT VCO",
+  "version": "2.0.0",
   "license": "proprietary",
   "brand": "KSZ",
   "author": "lazuli",
   "modules": [
     {
       "slug": "NoiseVCO",
-      "name": "Noise VCO",
+      "name": "KSZ Noise WT VCO",
       "description": "Evolving wavetable VCO with noise-derived dual buffers and morph",
       "tags": [
         "Oscillator",
