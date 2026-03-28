@@ -173,8 +173,16 @@ Szczegóły aktualnego algorytmu + opis legacy:
 ## Status
 
 - [x] Definicja założeń projektu i architektury `Noise_VCO`.
-- [ ] Implementacja kodu modułu VCV.
-- [ ] Wstępny build i smoke test w Rack.
+- [x] Implementacja kodu modułu VCV (Rack 2.x, brand `KSZ`).
+- [x] Build i deploy lokalny do Rack2 (`plugins-mac-arm64`).
+- [x] Anti-alias etap 1: mipmap WT zależny od częstotliwości.
+- [x] Anti-alias etap 2: odczyt 4-punktowy `cubic/hermite`.
+
+## Ostatnie commity
+
+- `d3e7bfe` - `Switch wavetable readout to 4-point Hermite interpolation`
+- `8494ce8` - `Add frequency-dependent wavetable mipmaps for cleaner highs`
+- `0de530e` - `Add initial M4L prototype files for Noise_VCO`
 
 ## Reverb backend
 

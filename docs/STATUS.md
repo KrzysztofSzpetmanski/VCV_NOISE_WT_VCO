@@ -77,3 +77,10 @@ Parametr jest nazwany `SMOTH` (bez drugiego `O`) zgodnie z aktualnym założenie
 - Założenie pod Daisy Seed:
   - reverb może zostać pominięty,
   - priorytetem ma być czystość i stabilność rdzenia WT VCO.
+
+## Ostatnie commity
+
+- `d3e7bfe` - `Switch wavetable readout to 4-point Hermite interpolation`
+- `8494ce8` - `Add frequency-dependent wavetable mipmaps for cleaner highs`
+- `0de530e` - `Add initial M4L prototype files for Noise_VCO`
+- `0e6c0dd` - `NoiseVCO: stabilize reverb, add wet HPF and trigger de-click`
