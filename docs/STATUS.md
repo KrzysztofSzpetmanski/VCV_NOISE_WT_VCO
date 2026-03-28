@@ -70,8 +70,9 @@ Parametr jest nazwany `SMOTH` (bez drugiego `O`) zgodnie z aktualnym założenie
   - dodany bank `WT mipmaps` (`2048/1024/512/256/128`),
   - odczyt oscylatora wybiera poziom mipmap dynamicznie wg częstotliwości,
   - między poziomami jest płynny crossfade (brak skoków przy przełączaniu poziomu).
-- Kolejne etapy (na później):
-  - lepsza interpolacja odczytu (np. cubic/hermite),
+- Etap 2 wdrożony:
+  - odczyt tabeli zmieniony z `linear` na 4-punktowy `cubic/hermite` (z fallbackiem `linear` dla bardzo małych tabel).
+- Kolejny etap (na później):
   - opcjonalny oversampling rdzenia oscylatora.
 - Założenie pod Daisy Seed:
   - reverb może zostać pominięty,

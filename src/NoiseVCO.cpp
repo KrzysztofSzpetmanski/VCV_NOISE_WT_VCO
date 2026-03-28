@@ -423,6 +423,18 @@ struct NoiseVCO : Module {
 	                               const std::array<int, kMipLevels>& mipSizes,
 	                               int level,
 	                               float ph) const {
+		auto wrapIndex = [](int i, int size) {
+			int r = i % size;
+			return (r < 0) ? (r + size) : r;
+		};
+		auto hermite4 = [](float xm1, float x0, float x1, float x2, float t) {
+			float c0 = x0;
+			float c1 = 0.5f * (x1 - xm1);
+			float c2 = xm1 - 2.5f * x0 + 2.f * x1 - 0.5f * x2;
+			float c3 = 0.5f * (x2 - xm1) + 1.5f * (x0 - x1);
+			return ((c3 * t + c2) * t + c1) * t + c0;
+		};
+
 		int l = clamp(level, 0, kMipLevels - 1);
 		int sizeLocal = mipSizes[l];
 		if (sizeLocal < 2) {
@@ -431,14 +443,22 @@ struct NoiseVCO : Module {
 
 		float pos = ph * static_cast<float>(sizeLocal - 1);
 		int i0 = static_cast<int>(std::floor(pos));
-		int i1 = i0 + 1;
-		if (i1 >= sizeLocal) {
-			i1 = 0;
-		}
+		int i1 = wrapIndex(i0 + 1, sizeLocal);
 		float frac = pos - static_cast<float>(i0);
+
+		i0 = wrapIndex(i0, sizeLocal);
 		float s0 = mip[l][i0];
 		float s1 = mip[l][i1];
-		return sanitizeWaveSample(s0 + (s1 - s0) * frac);
+		float linear = s0 + (s1 - s0) * frac;
+
+		if (sizeLocal < 4) {
+			return sanitizeWaveSample(linear);
+		}
+
+		int im1 = wrapIndex(i0 - 1, sizeLocal);
+		int i2 = wrapIndex(i0 + 2, sizeLocal);
+		float cubic = hermite4(mip[l][im1], s0, s1, mip[l][i2], frac);
+		return sanitizeWaveSample(cubic);
 	}
 
 	void selectMipLevels(float freq, int& level0, int& level1, float& blend) const {
