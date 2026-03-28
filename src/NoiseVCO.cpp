@@ -272,6 +272,7 @@ struct NoiseVCO : Module {
 	static constexpr int kMaxWavetableSize = 4096;
 	static constexpr int kMaxVoices = 10; // 1 + unison(0..9)
 	static constexpr int kGeneratedWavetableSize = 2048;
+	static constexpr int kMipLevels = 5; // 2048,1024,512,256,128
 	static constexpr int kMaxDensePoints = 48;
 	static constexpr int kMaxAnchorPoints = kMaxDensePoints + 2;
 	static constexpr float kTableTransitionTimeSec = 0.5f; // 500 ms
@@ -334,6 +335,11 @@ struct NoiseVCO : Module {
 	std::array<float, kMaxWavetableSize> wtMorph {};
 	// Previous playback table for output/display crossfade.
 	std::array<float, kMaxWavetableSize> wtMorphPrev {};
+	// Band-limited mipmap pyramids for current and previous tables.
+	std::array<std::array<float, kGeneratedWavetableSize>, kMipLevels> wtMorphMip {};
+	std::array<std::array<float, kGeneratedWavetableSize>, kMipLevels> wtMorphPrevMip {};
+	std::array<int, kMipLevels> wtMorphMipSize {};
+	std::array<int, kMipLevels> wtMorphPrevMipSize {};
 	int wtSize = 1024;
 	float lastMorph = -1.f;
 	int lastDense = 10;
@@ -406,13 +412,19 @@ struct NoiseVCO : Module {
 		rebuildMorphBaseTable(computeMorphParam());
 		rebuildPlaybackTable(wtSize);
 		wtMorphPrev = wtMorph;
+		wtMorphPrevMip = wtMorphMip;
+		wtMorphPrevMipSize = wtMorphMipSize;
 		reverb.Init(48000.f);
 		updateReverbWetHighpass(48000.f);
 		resetReverbWetHighpass();
 	}
 
-	float readMorphSample(float ph) {
-		const int sizeLocal = kGeneratedWavetableSize;
+	float readWavetableLevelSample(const std::array<std::array<float, kGeneratedWavetableSize>, kMipLevels>& mip,
+	                               const std::array<int, kMipLevels>& mipSizes,
+	                               int level,
+	                               float ph) const {
+		int l = clamp(level, 0, kMipLevels - 1);
+		int sizeLocal = mipSizes[l];
 		if (sizeLocal < 2) {
 			return 0.f;
 		}
@@ -424,8 +436,38 @@ struct NoiseVCO : Module {
 			i1 = 0;
 		}
 		float frac = pos - static_cast<float>(i0);
-		float curr = wtMorph[i0] + (wtMorph[i1] - wtMorph[i0]) * frac;
-		float prev = wtMorphPrev[i0] + (wtMorphPrev[i1] - wtMorphPrev[i0]) * frac;
+		float s0 = mip[l][i0];
+		float s1 = mip[l][i1];
+		return sanitizeWaveSample(s0 + (s1 - s0) * frac);
+	}
+
+	void selectMipLevels(float freq, int& level0, int& level1, float& blend) const {
+		float sr = std::max(previousSampleRate, 1000.f);
+		float f = std::max(std::abs(freq), 1.f);
+		// Required table size for current pitch to keep top harmonic near Nyquist.
+		float desiredSize = clamp(sr / f, 128.f, static_cast<float>(kGeneratedWavetableSize));
+		float rawLevel = std::log2(static_cast<float>(kGeneratedWavetableSize) / desiredSize);
+		// Slight upward bias reduces alias-prone highs at the expense of tiny HF roll-off.
+		float levelF = clamp(rawLevel + 0.20f, 0.f, static_cast<float>(kMipLevels - 1));
+		level0 = static_cast<int>(std::floor(levelF));
+		level1 = std::min(level0 + 1, kMipLevels - 1);
+		blend = levelF - static_cast<float>(level0);
+	}
+
+	float readMorphSample(float ph, float freq) {
+		int level0 = 0;
+		int level1 = 0;
+		float levelBlend = 0.f;
+		selectMipLevels(freq, level0, level1, levelBlend);
+
+		float curr0 = readWavetableLevelSample(wtMorphMip, wtMorphMipSize, level0, ph);
+		float curr1 = readWavetableLevelSample(wtMorphMip, wtMorphMipSize, level1, ph);
+		float curr = sanitizeWaveSample(curr0 + (curr1 - curr0) * levelBlend);
+
+		float prev0 = readWavetableLevelSample(wtMorphPrevMip, wtMorphPrevMipSize, level0, ph);
+		float prev1 = readWavetableLevelSample(wtMorphPrevMip, wtMorphPrevMipSize, level1, ph);
+		float prev = sanitizeWaveSample(prev0 + (prev1 - prev0) * levelBlend);
+
 		return sanitizeWaveSample(prev + (curr - prev) * tableBlend);
 	}
 
@@ -746,6 +788,39 @@ struct NoiseVCO : Module {
 		lastMorph = morph;
 	}
 
+	void rebuildMipmapsFromTable(
+		const std::array<float, kMaxWavetableSize>& source,
+		std::array<std::array<float, kGeneratedWavetableSize>, kMipLevels>& mipOut,
+		std::array<int, kMipLevels>& mipSizesOut) {
+		const int baseSize = kGeneratedWavetableSize;
+		mipSizesOut[0] = baseSize;
+		for (int i = 0; i < baseSize; ++i) {
+			mipOut[0][i] = sanitizeWaveSample(source[i]);
+		}
+		mipOut[0][0] = 0.f;
+		mipOut[0][baseSize - 1] = 0.f;
+
+		for (int level = 1; level < kMipLevels; ++level) {
+			int prevSize = mipSizesOut[level - 1];
+			int size = std::max(128, prevSize / 2);
+			mipSizesOut[level] = size;
+
+			for (int i = 0; i < size; ++i) {
+				int i0 = std::min(i * 2, prevSize - 1);
+				int i1 = std::min(i0 + 1, prevSize - 1);
+				float a = mipOut[level - 1][i0];
+				float b = mipOut[level - 1][i1];
+				mipOut[level][i] = sanitizeWaveSample(0.5f * (a + b));
+			}
+
+			for (int i = size; i < kGeneratedWavetableSize; ++i) {
+				mipOut[level][i] = 0.f;
+			}
+			mipOut[level][0] = 0.f;
+			mipOut[level][size - 1] = 0.f;
+		}
+	}
+
 	void rebuildPlaybackTable(int windowSize) {
 		const int outSize = kGeneratedWavetableSize;
 		const int localWtSize = clamp(windowSize, 256, kGeneratedWavetableSize);
@@ -778,6 +853,7 @@ struct NoiseVCO : Module {
 		wtMorph[0] = 0.f;
 		wtMorph[outSize - 1] = 0.f;
 		wtSize = localWtSize;
+		rebuildMipmapsFromTable(wtMorph, wtMorphMip, wtMorphMipSize);
 	}
 
 	void copyDisplayData(std::array<float, kMaxWavetableSize>& outData, int& outSize, float& outMorph) const {
@@ -794,10 +870,14 @@ struct NoiseVCO : Module {
 
 	void captureAudibleMorphTable(std::array<float, kMaxWavetableSize>& outData) {
 		const int outSize = kGeneratedWavetableSize;
+		float blend = clamp(tableBlend, 0.f, 1.f);
 		for (int i = 0; i < outSize; ++i) {
-			float ph = static_cast<float>(i) / static_cast<float>(outSize - 1);
-			outData[i] = readMorphSample(ph);
+			float prev = wtMorphPrev[i];
+			float curr = wtMorph[i];
+			outData[i] = sanitizeWaveSample(prev + (curr - prev) * blend);
 		}
+		outData[0] = 0.f;
+		outData[outSize - 1] = 0.f;
 	}
 
 	void onReset() override {
@@ -810,6 +890,8 @@ struct NoiseVCO : Module {
 		rebuildMorphBaseTable(0.5f);
 		rebuildPlaybackTable(computeWavetableSize());
 		wtMorphPrev = wtMorph;
+		wtMorphPrevMip = wtMorphMip;
+		wtMorphPrevMipSize = wtMorphMipSize;
 		tableBlend = 1.f;
 		pendingGenRequest = false;
 		controlUpdateTimer = 0.f;
@@ -834,6 +916,7 @@ struct NoiseVCO : Module {
 
 		if (sizeChanged || waveShapeChanged) {
 			captureAudibleMorphTable(wtMorphPrev);
+			rebuildMipmapsFromTable(wtMorphPrev, wtMorphPrevMip, wtMorphPrevMipSize);
 			if (waveShapeChanged) {
 				if (needSeed) {
 					regenerateNoiseSources();
@@ -903,7 +986,7 @@ struct NoiseVCO : Module {
 				phase[v] -= std::floor(phase[v]);
 			}
 
-			float s = readMorphSample(phase[v]);
+			float s = readMorphSample(phase[v], freq);
 			float pan = clamp(0.5f + 0.35f * spread, 0.f, 1.f);
 			float gainL = std::sqrt(1.f - pan);
 			float gainR = std::sqrt(pan);

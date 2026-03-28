@@ -66,9 +66,13 @@ Parametr jest nazwany `SMOTH` (bez drugiego `O`) zgodnie z aktualnym założenie
 
 - Bieżąca wersja modułu została uznana za działającą i stabilną odsłuchowo.
 - Reverb pozostaje w wersji `DaisySP ReverbSc` (strojone mapowanie `RVB TM / RVB FB / RVB MIX`).
-- Kolejny etap (`next ver`) planowany jest pod poprawę czystości oscylatora:
-  - rozważenie antyaliasingu w stylu Surge XT (`WT mipmaps + lepsza interpolacja + opcjonalnie OS`),
-  - z myślą o przyszłym porcie na Daisy Seed.
+- Poprawa czystości oscylatora (inspiracja Surge XT), etap 1 wdrożony:
+  - dodany bank `WT mipmaps` (`2048/1024/512/256/128`),
+  - odczyt oscylatora wybiera poziom mipmap dynamicznie wg częstotliwości,
+  - między poziomami jest płynny crossfade (brak skoków przy przełączaniu poziomu).
+- Kolejne etapy (na później):
+  - lepsza interpolacja odczytu (np. cubic/hermite),
+  - opcjonalny oversampling rdzenia oscylatora.
 - Założenie pod Daisy Seed:
   - reverb może zostać pominięty,
   - priorytetem ma być czystość i stabilność rdzenia WT VCO.
