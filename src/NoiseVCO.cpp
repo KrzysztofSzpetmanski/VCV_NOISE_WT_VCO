@@ -1,4 +1,5 @@
 #include "plugin.hpp"
+#include "BuildNumber.hpp"
 #include "reverbsc.h"
 
 #include <algorithm>
@@ -1327,62 +1328,62 @@ struct NoiseVCOWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-			auto* display = createWidget<WavetableDisplay>(mm2px(Vec(3.5f, 12.0f)));
+			auto* display = createWidget<WavetableDisplay>(mm2px(Vec(5.5f, 15.0f)));
 			display->box.size = mm2px(Vec(41.5f, 24.0f));
 			display->moduleRef = module;
 			addChild(display);
 
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(10.0f, 47.0f)), module, NoiseVCO::PITCH_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(24.0f, 47.0f)), module, NoiseVCO::DETUNE_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(38.0f, 47.0f)), module, NoiseVCO::UNISON_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(52.0f, 47.0f)), module, NoiseVCO::OCTAVE_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(10.0f, 53.0f)), module, NoiseVCO::PITCH_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(25.0f, 53.0f)), module, NoiseVCO::DETUNE_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(40.0f, 53.0f)), module, NoiseVCO::UNISON_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(55.0f, 53.0f)), module, NoiseVCO::OCTAVE_PARAM));
 
-		auto* morphKnob = createParamCentered<CvDepthKnob>(mm2px(Vec(10.0f, 63.0f)), module, NoiseVCO::MORPH_PARAM);
+		auto* morphKnob = createParamCentered<CvDepthKnob>(mm2px(Vec(10.0f, 68.0f)), module, NoiseVCO::MORPH_PARAM);
 		morphKnob->moduleRef = module;
 		morphKnob->depthParam = NoiseVCO::MORPH_CV_DEPTH_PARAM;
 		morphKnob->cvInput = NoiseVCO::MORPH_CV_INPUT;
 		morphKnob->depthMenuLabel = "MORPH CV depth";
 		addParam(morphKnob);
 
-			auto* densKnob = createParamCentered<CvDepthKnob>(mm2px(Vec(24.0f, 63.0f)), module, NoiseVCO::DENS_PARAM);
+			auto* densKnob = createParamCentered<CvDepthKnob>(mm2px(Vec(25.0f, 68.0f)), module, NoiseVCO::DENS_PARAM);
 			densKnob->moduleRef = module;
 			densKnob->depthParam = NoiseVCO::DENS_CV_DEPTH_PARAM;
 			densKnob->cvInput = NoiseVCO::DENS_CV_INPUT;
 			densKnob->depthMenuLabel = "DENS CV depth";
 			addParam(densKnob);
 
-			auto* smothKnob = createParamCentered<CvDepthKnob>(mm2px(Vec(38.0f, 63.0f)), module, NoiseVCO::SMOTH_PARAM);
+			auto* smothKnob = createParamCentered<CvDepthKnob>(mm2px(Vec(40.0f, 68.0f)), module, NoiseVCO::SMOTH_PARAM);
 			smothKnob->moduleRef = module;
 			smothKnob->depthParam = NoiseVCO::SMOTH_CV_DEPTH_PARAM;
 			smothKnob->cvInput = NoiseVCO::SMOTH_CV_INPUT;
 			smothKnob->depthMenuLabel = "SMOTH CV depth";
 			addParam(smothKnob);
 
-			auto* sizeKnob = createParamCentered<CvDepthKnob>(mm2px(Vec(52.0f, 63.0f)), module, NoiseVCO::WT_SIZE_PARAM);
+			auto* sizeKnob = createParamCentered<CvDepthKnob>(mm2px(Vec(55.0f, 68.0f)), module, NoiseVCO::WT_SIZE_PARAM);
 			sizeKnob->moduleRef = module;
 			sizeKnob->depthParam = NoiseVCO::WT_SIZE_CV_DEPTH_PARAM;
 			sizeKnob->cvInput = NoiseVCO::WT_SIZE_CV_INPUT;
 			sizeKnob->depthMenuLabel = "WT SIZE CV depth";
 			addParam(sizeKnob);
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(52.0f, 20.0f)), module, NoiseVCO::GEN_TRIG_INPUT));
-		addParam(createParamCentered<LEDButton>(mm2px(Vec(52.0f, 28.0f)), module, NoiseVCO::GEN_PARAM));
-		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(52.0f, 34.0f)), module, NoiseVCO::GEN_LIGHT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(55.0f, 23.0f)), module, NoiseVCO::GEN_TRIG_INPUT));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(55.0f, 35.0f)), module, NoiseVCO::GEN_PARAM));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(55.0f, 41.0f)), module, NoiseVCO::GEN_LIGHT));
 
-					addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(10.0f, 79.0f)), module, NoiseVCO::ENV_PARAM));
-				addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(24.0f, 79.0f)), module, NoiseVCO::RVB_TIME_PARAM));
-				addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(38.0f, 79.0f)), module, NoiseVCO::RVB_FB_PARAM));
-				addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(52.0f, 79.0f)), module, NoiseVCO::RVB_MIX_PARAM));
+					addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(10.0f, 83.0f)), module, NoiseVCO::ENV_PARAM));
+				addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(25.0f, 83.0f)), module, NoiseVCO::RVB_TIME_PARAM));
+				addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(40.0f, 83.0f)), module, NoiseVCO::RVB_FB_PARAM));
+				addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(55.0f, 83.0f)), module, NoiseVCO::RVB_MIX_PARAM));
 
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(10.0f, 95.0f)), module, NoiseVCO::MORPH_CV_INPUT));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(24.0f, 95.0f)), module, NoiseVCO::DENS_CV_INPUT));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(38.0f, 95.0f)), module, NoiseVCO::SMOTH_CV_INPUT));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(52.0f, 95.0f)), module, NoiseVCO::WT_SIZE_CV_INPUT));
+			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(10.0f, 98.0f)), module, NoiseVCO::MORPH_CV_INPUT));
+			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(25.0f, 98.0f)), module, NoiseVCO::DENS_CV_INPUT));
+			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(40.0f, 98.0f)), module, NoiseVCO::SMOTH_CV_INPUT));
+			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(55.0f, 98.0f)), module, NoiseVCO::WT_SIZE_CV_INPUT));
 
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(10.0f, 111.0f)), module, NoiseVCO::VOCT_INPUT));
-				addInput(createInputCentered<PJ301MPort>(mm2px(Vec(24.0f, 111.0f)), module, NoiseVCO::TRIG_INPUT));
-			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(38.0f, 111.0f)), module, NoiseVCO::LEFT_OUTPUT));
-			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(52.0f, 111.0f)), module, NoiseVCO::RIGHT_OUTPUT));
+			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(10.0f, 113.0f)), module, NoiseVCO::VOCT_INPUT));
+				addInput(createInputCentered<PJ301MPort>(mm2px(Vec(25.0f, 113.0f)), module, NoiseVCO::TRIG_INPUT));
+			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(40.0f, 113.0f)), module, NoiseVCO::LEFT_OUTPUT));
+			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(55.0f, 113.0f)), module, NoiseVCO::RIGHT_OUTPUT));
 
 		auto addPanelLabel = [this](float xMm, float yMm, const char* txt, int size = 8, NVGcolor color = nvgRGB(0x0f, 0x17, 0x2a)) {
 			auto* l = createWidget<PanelLabel>(mm2px(Vec(xMm, yMm)));
@@ -1392,32 +1393,38 @@ struct NoiseVCOWidget : ModuleWidget {
 			addChild(l);
 		};
 
-			addPanelLabel(30.5f, 7.5f, "NOISE VCO", 10, nvgRGB(0x0b, 0x12, 0x20));
-				addPanelLabel(10.0f, 41.0f, "PITCH", 7, nvgRGB(0x1f, 0x29, 0x37));
-				addPanelLabel(24.0f, 41.0f, "DETUNE", 7, nvgRGB(0x1f, 0x29, 0x37));
-				addPanelLabel(38.0f, 41.0f, "UNISON", 7, nvgRGB(0x1f, 0x29, 0x37));
-				addPanelLabel(52.0f, 41.0f, "OCT", 7, nvgRGB(0x1f, 0x29, 0x37));
+			addPanelLabel(15.5f, 10.5f, "NOISE VCO", 10, nvgRGB(0x0b, 0x12, 0x20));
+			auto* buildLabel = createWidget<PanelLabel>(mm2px(Vec(58.0f, 10.5f)));
+			buildLabel->text = string::f("BUILD %03d", kNoiseVCOBuildNumber);
+			buildLabel->fontSize = 7;
+			buildLabel->align = NVG_ALIGN_RIGHT | NVG_ALIGN_TOP;
+			buildLabel->color = nvgRGB(0x33, 0x41, 0x55);
+			addChild(buildLabel);
+				addPanelLabel(10.0f, 45.0f, "PITCH", 7, nvgRGB(0x1f, 0x29, 0x37));
+				addPanelLabel(25.0f, 45.0f, "DETUNE", 7, nvgRGB(0x1f, 0x29, 0x37));
+				addPanelLabel(40.0f, 45.0f, "UNISON", 7, nvgRGB(0x1f, 0x29, 0x37));
+				addPanelLabel(55.0f, 45.0f, "OCT", 7, nvgRGB(0x1f, 0x29, 0x37));
 
-					addPanelLabel(10.0f, 57.0f, "MORPH", 8);
-					addPanelLabel(24.0f, 57.0f, "DENS", 8);
-					addPanelLabel(38.0f, 57.0f, "SMOTH", 8);
-					addPanelLabel(52.0f, 57.0f, "WTSIZE", 8);
-			addPanelLabel(52.0f, 14.0f, "REG TRIG", 7);
-			addPanelLabel(52.0f, 22.0f, "REG", 8);
-						addPanelLabel(10.0f, 73.0f, "ENV", 8);
-					addPanelLabel(24.0f, 73.0f, "RVB TM", 8);
-					addPanelLabel(38.0f, 73.0f, "RVB FB", 8);
-					addPanelLabel(52.0f, 73.0f, "RVB MIX", 8);
+					addPanelLabel(10.0f, 62.0f, "MORPH", 8);
+					addPanelLabel(25.0f, 62.0f, "DENS", 8);
+					addPanelLabel(40.0f, 62.0f, "SMOTH", 8);
+					addPanelLabel(55.0f, 62.0f, "WTSIZE", 8);
+			addPanelLabel(55.0f, 17.0f, "REG", 7);
+			addPanelLabel(55.0f, 29.0f, "REG", 8);
+						addPanelLabel(10.0f, 77.0f, "ENV", 8);
+					addPanelLabel(25.0f, 77.0f, "RVB TM", 8);
+					addPanelLabel(40.0f, 77.0f, "RVB FB", 8);
+					addPanelLabel(55.0f, 77.0f, "RVB MIX", 8);
 
-			addPanelLabel(10.0f, 89.0f, "MRPH CV", 7);
-			addPanelLabel(24.0f, 89.0f, "DENS CV", 7);
-			addPanelLabel(38.0f, 89.0f, "SMOTH CV", 7);
-			addPanelLabel(52.0f, 89.0f, "WT CV", 7);
+			addPanelLabel(10.0f, 92.0f, "MRPH CV", 7);
+			addPanelLabel(25.0f, 92.0f, "DENS CV", 7);
+			addPanelLabel(40.0f, 92.0f, "SMOTH CV", 7);
+			addPanelLabel(55.0f, 92.0f, "WT CV", 7);
 
-			addPanelLabel(10.0f, 105.0f, "VOCT", 7);
-			addPanelLabel(24.0f, 105.0f, "TRIG", 7);
-			addPanelLabel(38.0f, 105.0f, "L OUT", 7);
-			addPanelLabel(52.0f, 105.0f, "R OUT", 7);
+			addPanelLabel(10.0f, 107.0f, "VOCT", 7);
+			addPanelLabel(25.0f, 107.0f, "TRIG", 7);
+			addPanelLabel(40.0f, 107.0f, "L OUT", 7);
+			addPanelLabel(55.0f, 107.0f, "R OUT", 7);
 		}
 	};
 
