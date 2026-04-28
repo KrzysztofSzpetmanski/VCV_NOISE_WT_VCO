@@ -1428,4 +1428,4 @@ struct NoiseVCOWidget : ModuleWidget {
 		}
 	};
 
-Model* modelNoiseVCO = createModel<NoiseVCO, NoiseVCOWidget>("NoiseVCO");
+Model* modelNoiseVCO = createModel<NoiseVCO, NoiseVCOWidget>("KSZ_Noise_WT_VCO");

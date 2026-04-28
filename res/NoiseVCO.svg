@@ -11,8 +11,6 @@
   <rect x="2" y="2" width="62.04" height="124.5" fill="none" stroke="#1f2937" stroke-width="0.8" />
 
   <rect x="4" y="4" width="58.04" height="10" fill="#e2e8f0" stroke="#64748b" stroke-width="0.35" />
-  <line x1="2" y1="85.2" x2="64.04" y2="85.2" stroke="#334155" stroke-width="0.5" />
-  <line x1="30.48" y1="85.2" x2="30.48" y2="127.0" stroke="#94a3b8" stroke-width="0.35" />
 
   <text x="30.48" y="9.2" text-anchor="middle" fill="#0f172a" font-size="3.1" font-family="DejaVu Sans">KSZ NOISE WT VCO</text>
   <text x="30.48" y="16.8" text-anchor="middle" fill="#1f2937" font-size="2.4" font-family="DejaVu Sans">RACK WAVETABLE OSC</text>
